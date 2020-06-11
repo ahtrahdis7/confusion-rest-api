@@ -4,8 +4,10 @@ var User = require('./models/user');
 var JwtStrategy = require('passport-jwt').Strategy;
 var ExtractJwt = require('passport-jwt').ExtractJwt;
 var jwt = require('jsonwebtoken'); // used to create, sign, and verify tokens
+var FacebookTokenStrategy = require('passport-facebook-token');
 
 var config = require('./config.js');
+
 passport.use(new LocalStrategy(User.authenticate()));
 passport.serializeUser(User.serializeUser());
 
@@ -35,16 +37,41 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
     }));
 
 exports.verifyUser = passport.authenticate('jwt', {session: false});
-
-
 exports.verifyAdmin= (req,res,next)=>{
     if(req.user.admin){
         next();
+    } else {  
+        var err = new Error('Only admin can perform this operation');
+        err.status = 403;
+        return next(err);
     }
-    else{  
-     var err = new Error('Only admin can perform this operation');
-    err.status = 403;
-    return next(err);
-    }
-
 };
+
+exports.facebookPassport = passport.use(new 
+FacebookTokenStrategy({
+        clientID: config.facebook.clientId,
+        clientSecret: config.facebook.clientSecret
+    }, (accessToken, refreshToken, profile, done) => {
+        User.findOne({facebookId: profile.id}, (err, user) => {
+            if(err){
+                return done(err, false);
+            }
+            else if(!err && user !== null){
+                return done(null, user);
+            }
+            else {
+                user = new User({ username: 
+                    profile.displayName});
+                    user.facebookId = profile.id;
+                    user.firstname = profile.name.givenName;
+                    user.lastname = profile.name.familyName;
+                    user.save((err, user) => {
+                        if(err)
+                            return done(err, false);
+                        else 
+                            return done(false, user);
+                    });
+            }
+        });
+    }
+));
