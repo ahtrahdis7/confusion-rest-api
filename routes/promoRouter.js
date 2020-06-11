@@ -2,14 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 
 const promoRouter = express.Router();
-// const dishRouterId = express.Router();
+
 
 const mongoose = require('mongoose');
 const Promotions = require('../models/promotions');
 var authenticate = require('../authenticate');
 
 promoRouter.use(bodyParser.json());
-// dishRouterId.use(bodyParser.json());
+
 
 
 promoRouter.route('/')

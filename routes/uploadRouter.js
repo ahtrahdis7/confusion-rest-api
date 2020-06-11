@@ -45,6 +45,4 @@ upload.single('imageFile'), (req, res) => {
 })
 
 
-
-    // module.exports = dishRouterId;
 module.exports = uploadRouter;
